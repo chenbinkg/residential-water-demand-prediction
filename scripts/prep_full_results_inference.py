@@ -3,6 +3,7 @@ import time
 import os
 import pandas as pd
 import argparse
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Stitch Inference Results")
@@ -36,8 +37,9 @@ if __name__ == "__main__":
         hist_pred = pd.read_csv(hist_file)
         train_file = glob.glob(f"{result_dir}/{y_col_1}_training_pred.csv")[0]
         train_pred = pd.read_csv(train_file)
-        posttrain_file = glob.glob(f"{result_dir}/{y_col_1}_post-training_pred.csv")[0]
+        posttrain_file = glob.glob(f"{result_dir}/full_results.csv")[0]
         posttrain_pred = pd.read_csv(posttrain_file)
+        posttrain_pred = posttrain_pred[["Date", col]]
         df_pred = pd.concat([hist_pred, train_pred, posttrain_pred], axis=0)
         df_pred.index = pd.to_datetime(df_pred["Date"], format="mixed", dayfirst=True)
         df_list.append(df_pred[df_pred.columns[0]])
@@ -45,9 +47,9 @@ if __name__ == "__main__":
         # check results
         df_hist_1 = df_pred[[col, "Restriction level"]].join(df_y[[col]].rename(columns={col: col+"_obs"}), how="left")
         df_hist_2 = df_hist_1[(df_hist_1.index>"2022-12-31")]
-        plt.scatter(df_hist_2[col], df_hist_2[col+"_obs"])
-        plt.title(col)
-        plt.show()
+#         plt.scatter(df_hist_2[col], df_hist_2[col+"_obs"])
+#         plt.title(col)
+#         plt.show()
         df_hist_1 = df_hist_1[(df_hist_1.index>"2022-12-31")&(df_hist_1.index<"2025-01-01")]
         # df_hist_1.index = pd.to_datetime(df_hist_1.index)
         fig, ax = plt.subplots()

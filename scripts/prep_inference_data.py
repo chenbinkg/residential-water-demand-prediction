@@ -1,33 +1,9 @@
-import sys
 import os
-import re
 import pandas as pd
-import glob
 import time
-import datetime as dt
 import numpy as np
-import pandas as pd
-import seaborn as sns
-import tensorflow as tf
-# from tensorflow import keras
-import matplotlib.pyplot as plt
-import csv
 import math
-import sklearn.metrics as skm
 from datetime import datetime
-from keras.models import Sequential, load_model
-from keras.layers import LSTM, Dense, GRU, SimpleRNN, Bidirectional, Dropout
-# from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_validate, KFold, cross_val_score
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
-from sklearn import decomposition
-from sklearn.preprocessing import StandardScaler
-import matplotlib.ticker as mticker
-import joblib
-from prophet import Prophet
-from pandas.plotting import autocorrelation_plot
 import holidays
 import warnings
 import argparse
@@ -217,7 +193,7 @@ def calc_cm(df, y_cols):
     return df_cm
 
 def read_coefficient(y_col):
-    df_coeff = pd.read_csv(f"/nesi/project/niwa03661/residential_water_pcd/data/{y_col} xpARA.csv")
+    df_coeff = pd.read_csv(f"./data/{y_col} xpARA.csv")
     C1 = df_coeff["x1"].values[0]
     C2 = df_coeff["x2"].values[0]
     C3 = df_coeff["x3"].values[0]
@@ -245,21 +221,23 @@ if __name__ == "__main__":
        'North Wellington (Moa)', 'North Wellington (Porirua)']
     
     # input data
+    print(f"reading in: {args.file_dir}")
     df = pd.read_csv(file_dir)
 
     # # target data
-    df_Y = pd.read_csv("/nesi/project/niwa03661/residential_water_pcd/Residential_water_pcd_2006_2024_Y.csv")
+    df_Y = pd.read_csv("./data/Residential_water_pcd_2006_2024_Y.csv")
     df_Y['Date'] = pd.to_datetime(df_Y['Date'])
     df_Y = df_Y.set_index("Date")
 
     df, df1 = preprocess(df)
-    df_restrict = pd.read_csv("/nesi/project/niwa03661/residential_water_pcd/data/RestrictionLevel.csv")
+    df_restrict = pd.read_csv("./data/RestrictionLevel.csv")
     df_restrict['Date'] = pd.to_datetime(df_restrict['Date'],format="%d/%m/%Y")
     df_restrict = df_restrict.set_index("Date")
     # df_train = exclude_restrictions(df.set_index("Date"), df_restrict.set_index("Date"))
-    df_cm = pd.read_csv("/nesi/project/niwa03661/residential_water_pcd/data/cm.csv")
-    save_dir_historical = "/nesi/project/niwa03661/residential_water_pcd/inference/historical"
-    save_dir_post_training = "/nesi/project/niwa03661/residential_water_pcd/inference/post_training"
+    df_cm = pd.read_csv("./data/cm.csv")
+    save_dir_historical = "data/historical"
+    save_dir_post_training = "data/post_training"
+    s3_inference_data_folder = "InferenceData"
     train_start_dt = "2006-01-01"
     train_end_dt = "2024-08-31"
 #     os.makedirs(os.path.join(save_dir, curr_time), exist_ok=True)
@@ -302,17 +280,21 @@ if __name__ == "__main__":
         )
         df_hist = df_hist.reset_index()
         df_hist["Date"] = pd.to_datetime(df_hist["Date"])
-        df_historical = df_hist[df_hist["Date"] < pd.to_datetime(train_start_dt)]
+        # df_historical = df_hist[df_hist["Date"] < pd.to_datetime(train_start_dt)]
         df_post_training = df_hist[df_hist["Date"] > pd.to_datetime(train_end_dt)]
-        
-        df_historical["Date"] = df_historical["Date"].apply(lambda x: datetime.strftime(x, "%d/%m/%Y"))
-        if not os.path.exists(file_path_historical):
-            df_historical.set_index("Date").to_csv(file_path_historical)
-        
+        # os.makedirs(save_dir_historical, exist_ok=True)
+        os.makedirs(save_dir_post_training, exist_ok=True)
+        # df_historical["Date"] = df_historical["Date"].apply(lambda x: datetime.strftime(x, "%d/%m/%Y"))
+        # if not os.path.exists(file_path_historical):
+        #     df_historical.set_index("Date").to_csv(file_path_historical)
         df_post_training["Date"] = df_post_training["Date"].apply(lambda x: datetime.strftime(x, "%d/%m/%Y"))
         df_post_training.set_index("Date").to_csv(file_path_post_training)
         # find last timestamp in the folder, if no file, look for filename in the main s3 bucket
         # only keep data > last timestamp
         # if no data, don't update the folder
 
-        s3.meta.client.upload_file(Filename=file_path_post_training, Bucket=bucket_name, Key=f"{foldername}/{filename}.csv")
+        s3.meta.client.upload_file(
+            Filename=file_path_post_training, 
+            Bucket=bucket_name, 
+            Key=f"{s3_inference_data_folder}/{foldername}/{filename}.csv"
+        )
