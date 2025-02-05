@@ -3,8 +3,9 @@
 This repository contains notebooks and scripts for predicting and simulating water demand using various machine learning models. The project leverages Amazon SageMaker Autopilot for model training and inference.
 
 ## Repository Structure
+```bash
 . ├── autopilot_demand_inference.ipynb ├── autopilot_demand_simulation_inference_c5m5xlarge.ipynb ├── autopilot_demand_simulation_inference_m4c4.ipynb ├── autopilot_demand_simulation_inference_m5large_c4c5-2x.ipynb ├── autopilot_demand_training.ipynb ├── consolidate_prediction_results.ipynb ├── consolidate_simulation_results.ipynb ├── data/ │ ├── cm.csv │ ├── Lower Hutt xpARA.csv │ ├── North Wellington (Moa) xpARA.csv │ └── ... ├── README.md ├── SageMakerAutopilotCandidateDefinitionNotebook.ipynb ├── SageMakerAutopilotDataExplorationNotebook.ipynb └── scripts/ ├── prep_full_results_inference.py └── prep_simulation_data.py
-
+```
 
 ## Notebooks
 
