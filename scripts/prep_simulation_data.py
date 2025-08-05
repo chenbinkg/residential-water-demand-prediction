@@ -1,4 +1,5 @@
 import os
+import s3fs
 import pandas as pd
 import time
 import numpy as np
@@ -16,7 +17,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]=""
 How to run this script
 - cd water-demand-prediction
 - run: 
-python scripts/prep_simulation_data.py --file_dir='data/input/Final_HydroClimaticFile_EC-Earth3_ssp585FIX.csv'
+python scripts/prep_simulation_data.py --file_dir='s3://niwa-water-demand-modelling/SimulationInput/Final_HydroClimaticFile_ACCESS-CM2_ssp585FIX.csv'
 - open autopilot_demand_simulation_inference_c5m5xlarge.ipynb and run all cells
 - open consolidate_simulation_results.ipynb and run all cells
 
@@ -327,12 +328,14 @@ if __name__ == "__main__":
         foldername = filename.replace(" ", "")
         s3_folder = "Simulation"
         df_out = pd.concat(d[y_col], axis=0) # get all replicates appended
-        file_path_simulation= os.path.join(
-            save_dir_simulation,
-            f"{filename}.csv"
-        )
+        s3_file_path = f"s3://{bucket_name}/{s3_folder}/{foldername}/{filename}.csv"
+        df_out.to_csv(s3_file_path, index=False)
+        # file_path_simulation= os.path.join(
+        #     save_dir_simulation,
+        #     f"{filename}.csv"
+        # )
 
-        df_out.to_csv(file_path_simulation, index=False)
-        print(f"saved to local: {file_path_simulation}")
-        s3.meta.client.upload_file(Filename=file_path_simulation, Bucket=bucket_name, Key=f"{s3_folder}/{foldername}/{filename}.csv")
+        # df_out.to_csv(file_path_simulation, index=False)
+        # print(f"saved to local: {file_path_simulation}")
+        # s3.meta.client.upload_file(Filename=file_path_simulation, Bucket=bucket_name, Key=f"{s3_folder}/{foldername}/{filename}.csv")
         print(f"uploaded to s3 bucket {bucket_name}: {s3_folder}/{foldername}/{filename}.csv")
