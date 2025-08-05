@@ -204,7 +204,7 @@ def calc_cm(df, y_cols):
     return df_cm
 
 def read_coefficient(y_col):
-    df_coeff = pd.read_csv(f"../data/{y_col} xpARA.csv")
+    df_coeff = pd.read_csv(f"./data/{y_col} xpARA.csv")
     C1 = df_coeff["x1"].values[0]
     C2 = df_coeff["x2"].values[0]
     C3 = df_coeff["x3"].values[0]
@@ -232,11 +232,11 @@ if __name__ == "__main__":
        'North Wellington (Moa)', 'North Wellington (Porirua)']
     
     # read in restriction level data
-    df_restrict = pd.read_csv("../data/RestrictionLevel.csv")
+    df_restrict = pd.read_csv("./data/RestrictionLevel.csv")
     df_restrict['Date'] = pd.to_datetime(df_restrict['Date'],format="%d/%m/%Y")
     df_restrict = df_restrict.set_index("Date")
     # read in cm data
-    df_cm = pd.read_csv("../data/cm.csv")
+    df_cm = pd.read_csv("./data/cm.csv")
     # define save directory
     save_dir = "data/simulation"
     simulation_name = file_dir.split("/")[-1].split(".")[0]
@@ -328,7 +328,7 @@ if __name__ == "__main__":
         foldername = filename.replace(" ", "")
         s3_folder = "Simulation"
         df_out = pd.concat(d[y_col], axis=0) # get all replicates appended
-        s3_file_path = f"s3://{bucket_name}/{s3_folder}/{foldername}/{filename}.csv"
+        s3_file_path = f"s3://{bucket_name}/{s3_folder}/{simulation_name}/{foldername}/{filename}.csv"
         df_out.to_csv(s3_file_path, index=False)
         # file_path_simulation= os.path.join(
         #     save_dir_simulation,
@@ -338,4 +338,4 @@ if __name__ == "__main__":
         # df_out.to_csv(file_path_simulation, index=False)
         # print(f"saved to local: {file_path_simulation}")
         # s3.meta.client.upload_file(Filename=file_path_simulation, Bucket=bucket_name, Key=f"{s3_folder}/{foldername}/{filename}.csv")
-        print(f"uploaded to s3 bucket {bucket_name}: {s3_folder}/{foldername}/{filename}.csv")
+        print(f"uploaded to {s3_file_path}")
