@@ -1,33 +1,9 @@
-import sys
 import os
-import re
 import pandas as pd
-import glob
 import time
-import datetime as dt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import tensorflow as tf
-# from tensorflow import keras
-import matplotlib.pyplot as plt
-import csv
 import math
-import sklearn.metrics as skm
-from datetime import datetime
-from keras.models import Sequential, load_model
-from keras.layers import LSTM, Dense, GRU, SimpleRNN, Bidirectional, Dropout
-# from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_validate, KFold, cross_val_score
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
-from sklearn import decomposition
-from sklearn.preprocessing import StandardScaler
-import matplotlib.ticker as mticker
-import joblib
-from prophet import Prophet
-from pandas.plotting import autocorrelation_plot
 import holidays
 import warnings
 import argparse
@@ -36,7 +12,16 @@ from collections import defaultdict
 
 warnings.simplefilter('ignore')
 os.environ["CUDA_VISIBLE_DEVICES"]=""
+'''
+How to run this script
+- cd water-demand-prediction
+- run: 
+python scripts/prep_simulation_data.py --file_dir='data/input/Final_HydroClimaticFile_EC-Earth3_ssp585FIX.csv'
+- open autopilot_demand_simulation_inference_c5m5xlarge.ipynb and run all cells
+- open consolidate_simulation_results.ipynb and run all cells
 
+The final results will be saved to: s3://niwa-water-demand-modelling/Simulation/results/Final_HydroClimaticFile_EC-Earth3_ssp585FIX_full_results.csv
+'''
 
 
 def MonthToSeason(x):   
@@ -218,7 +203,7 @@ def calc_cm(df, y_cols):
     return df_cm
 
 def read_coefficient(y_col):
-    df_coeff = pd.read_csv(f"/nesi/project/niwa03661/residential_water_pcd/data/{y_col} xpARA.csv")
+    df_coeff = pd.read_csv(f"../data/{y_col} xpARA.csv")
     C1 = df_coeff["x1"].values[0]
     C2 = df_coeff["x2"].values[0]
     C3 = df_coeff["x3"].values[0]
@@ -246,13 +231,13 @@ if __name__ == "__main__":
        'North Wellington (Moa)', 'North Wellington (Porirua)']
     
     # read in restriction level data
-    df_restrict = pd.read_csv("/nesi/project/niwa03661/residential_water_pcd/data/RestrictionLevel.csv")
+    df_restrict = pd.read_csv("../data/RestrictionLevel.csv")
     df_restrict['Date'] = pd.to_datetime(df_restrict['Date'],format="%d/%m/%Y")
     df_restrict = df_restrict.set_index("Date")
     # read in cm data
-    df_cm = pd.read_csv("/nesi/project/niwa03661/residential_water_pcd/data/cm.csv")
+    df_cm = pd.read_csv("../data/cm.csv")
     # define save directory
-    save_dir = "/nesi/project/niwa03661/residential_water_pcd/inference/simulation"
+    save_dir = "data/simulation"
     simulation_name = file_dir.split("/")[-1].split(".")[0]
     save_dir_simulation = os.path.join(save_dir, simulation_name)
     os.makedirs(save_dir_simulation, exist_ok=True)

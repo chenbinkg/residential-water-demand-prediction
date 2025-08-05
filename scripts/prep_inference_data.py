@@ -1,3 +1,7 @@
+# how to run this script
+# cd scripts
+# python prep_inference_data.py --file_dir '../data/input/Residential_water_pcd_1890_2025_2025-07-08.csv'
+
 import os
 import pandas as pd
 import time
@@ -9,10 +13,20 @@ import warnings
 import argparse
 import boto3
 
+
 warnings.simplefilter('ignore')
 os.environ["CUDA_VISIBLE_DEVICES"]=""
 
+'''
+How to run this script
+- cd water-demand-prediction
+- run: 
+python scripts/prep_inference_data.py --file_dir='data/input/Residential_water_pcd_1890_2025_2025-04-27.csv'
+- open autopilot_demand_inference.ipynb and run all cells
+- open consolidate_prediction_results.ipynb and run all cells
 
+The final results will be saved to: s3://niwa-water-demand-modelling/InferenceResults/full_results.csv
+'''
 
 def MonthToSeason(x):   
     global season
@@ -193,7 +207,7 @@ def calc_cm(df, y_cols):
     return df_cm
 
 def read_coefficient(y_col):
-    df_coeff = pd.read_csv(f"./data/{y_col} xpARA.csv")
+    df_coeff = pd.read_csv(f"../data/{y_col} xpARA.csv")
     C1 = df_coeff["x1"].values[0]
     C2 = df_coeff["x2"].values[0]
     C3 = df_coeff["x3"].values[0]
@@ -209,6 +223,7 @@ if __name__ == "__main__":
         type=str,
         help="csv file directory."
     )
+
     args, unknown = parser.parse_known_args()
     file_dir = args.file_dir
     curr_time = time.strftime("%Y%m%d", time.localtime())
@@ -225,17 +240,17 @@ if __name__ == "__main__":
     df = pd.read_csv(file_dir)
 
     # # target data
-    df_Y = pd.read_csv("./data/Residential_water_pcd_2006_2024_Y.csv")
+    df_Y = pd.read_csv("../data/Residential_water_pcd_2006_2024_Y.csv")
     df_Y['Date'] = pd.to_datetime(df_Y['Date'])
     df_Y = df_Y.set_index("Date")
 
     df, df1 = preprocess(df)
-    df_restrict = pd.read_csv("./data/RestrictionLevel.csv")
+    df_restrict = pd.read_csv("../data/RestrictionLevel.csv")
     df_restrict['Date'] = pd.to_datetime(df_restrict['Date'],format="%d/%m/%Y")
     df_restrict = df_restrict.set_index("Date")
     # df_train = exclude_restrictions(df.set_index("Date"), df_restrict.set_index("Date"))
-    df_cm = pd.read_csv("./data/cm.csv")
-    save_dir_historical = "data/historical"
+    df_cm = pd.read_csv("../data/cm.csv")
+    # save_dir_historical = "data/historical"
     save_dir_post_training = "data/post_training"
     s3_inference_data_folder = "InferenceData"
     train_start_dt = "2006-01-01"
@@ -274,10 +289,10 @@ if __name__ == "__main__":
             save_dir_post_training,
             f"{filename}.csv"
         )
-        file_path_historical = os.path.join(
-            save_dir_historical,
-            f"{filename}.csv"
-        )
+        # file_path_historical = os.path.join(
+        #     save_dir_historical,
+        #     f"{filename}.csv"
+        # )
         df_hist = df_hist.reset_index()
         df_hist["Date"] = pd.to_datetime(df_hist["Date"])
         # df_historical = df_hist[df_hist["Date"] < pd.to_datetime(train_start_dt)]
