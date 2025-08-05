@@ -3,7 +3,6 @@ import s3fs
 import pandas as pd
 import time
 import numpy as np
-import pandas as pd
 import math
 import holidays
 import warnings
@@ -18,7 +17,7 @@ How to run this script
 - cd water-demand-prediction
 - run: 
 python scripts/prep_simulation_data.py --file_dir='s3://niwa-water-demand-modelling/SimulationInput/Final_HydroClimaticFile_ACCESS-CM2_ssp585FIX.csv'
-- open autopilot_demand_simulation_inference_c5m5xlarge.ipynb and run all cells
+- open autopilot_demand_simulation_inference.ipynb and run all cells
 - open consolidate_simulation_results.ipynb and run all cells
 
 The final results will be saved to: s3://niwa-water-demand-modelling/Simulation/results/Final_HydroClimaticFile_EC-Earth3_ssp585FIX_full_results.csv

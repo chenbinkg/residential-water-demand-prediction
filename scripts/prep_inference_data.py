@@ -1,8 +1,5 @@
-# how to run this script
-# cd scripts
-# python prep_inference_data.py --file_dir '../data/input/Residential_water_pcd_1890_2025_2025-07-08.csv'
-
 import os
+import s3fs
 import pandas as pd
 import time
 import numpy as np
@@ -207,7 +204,7 @@ def calc_cm(df, y_cols):
     return df_cm
 
 def read_coefficient(y_col):
-    df_coeff = pd.read_csv(f"../data/{y_col} xpARA.csv")
+    df_coeff = pd.read_csv(f"./data/{y_col} xpARA.csv")
     C1 = df_coeff["x1"].values[0]
     C2 = df_coeff["x2"].values[0]
     C3 = df_coeff["x3"].values[0]
@@ -240,16 +237,16 @@ if __name__ == "__main__":
     df = pd.read_csv(file_dir)
 
     # # target data
-    df_Y = pd.read_csv("../data/Residential_water_pcd_2006_2024_Y.csv")
+    df_Y = pd.read_csv("./data/Residential_water_pcd_2006_2024_Y.csv")
     df_Y['Date'] = pd.to_datetime(df_Y['Date'])
     df_Y = df_Y.set_index("Date")
 
     df, df1 = preprocess(df)
-    df_restrict = pd.read_csv("../data/RestrictionLevel.csv")
+    df_restrict = pd.read_csv("./data/RestrictionLevel.csv")
     df_restrict['Date'] = pd.to_datetime(df_restrict['Date'],format="%d/%m/%Y")
     df_restrict = df_restrict.set_index("Date")
     # df_train = exclude_restrictions(df.set_index("Date"), df_restrict.set_index("Date"))
-    df_cm = pd.read_csv("../data/cm.csv")
+    df_cm = pd.read_csv("./data/cm.csv")
     # save_dir_historical = "data/historical"
     save_dir_post_training = "data/post_training"
     s3_inference_data_folder = "InferenceData"
@@ -303,13 +300,13 @@ if __name__ == "__main__":
         # if not os.path.exists(file_path_historical):
         #     df_historical.set_index("Date").to_csv(file_path_historical)
         df_post_training["Date"] = df_post_training["Date"].apply(lambda x: datetime.strftime(x, "%d/%m/%Y"))
-        df_post_training.set_index("Date").to_csv(file_path_post_training)
+        # df_post_training.set_index("Date").to_csv(file_path_post_training)
         # find last timestamp in the folder, if no file, look for filename in the main s3 bucket
-        # only keep data > last timestamp
-        # if no data, don't update the folder
+        s3_file_path = f"s3://{bucket_name}/{s3_inference_data_folder}/{foldername}/{filename}.csv"
+        df_post_training.set_index("Date").to_csv(s3_file_path)
 
-        s3.meta.client.upload_file(
-            Filename=file_path_post_training, 
-            Bucket=bucket_name, 
-            Key=f"{s3_inference_data_folder}/{foldername}/{filename}.csv"
-        )
+        # s3.meta.client.upload_file(
+        #     Filename=file_path_post_training, 
+        #     Bucket=bucket_name, 
+        #     Key=f"{s3_inference_data_folder}/{foldername}/{filename}.csv"
+        # )
