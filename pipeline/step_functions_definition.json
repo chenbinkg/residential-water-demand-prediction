@@ -1,0 +1,76 @@
+{
+  "Comment": "Water Demand Prediction Pipeline",
+  "StartAt": "DataPreparation",
+  "States": {
+    "DataPreparation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "water-demand-data-prep",
+        "Payload": {
+          "bucket_name.$": "$.bucket_name",
+          "file_key.$": "$.file_key"
+        }
+      },
+      "ResultPath": "$.prep_result",
+      "Next": "InferenceJobs"
+    },
+    "InferenceJobs": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "water-demand-inference",
+        "Payload": {
+          "processed_files.$": "$.prep_result.Payload.processed_files",
+          "bucket_name.$": "$.bucket_name"
+        }
+      },
+      "ResultPath": "$.inference_result",
+      "Next": "WaitForJobs"
+    },
+    "WaitForJobs": {
+      "Type": "Wait",
+      "Seconds": 300,
+      "Next": "CheckJobStatus"
+    },
+    "CheckJobStatus": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:sagemaker:describeTransformJob",
+      "Parameters": {
+        "TransformJobName.$": "$.inference_result.Payload.job_names[0]"
+      },
+      "Next": "JobComplete?"
+    },
+    "JobComplete?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.TransformJobStatus",
+          "StringEquals": "Completed",
+          "Next": "ConsolidateResults"
+        },
+        {
+          "Variable": "$.TransformJobStatus",
+          "StringEquals": "Failed",
+          "Next": "JobFailed"
+        }
+      ],
+      "Default": "WaitForJobs"
+    },
+    "ConsolidateResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "water-demand-consolidate",
+        "Payload": {
+          "bucket_name.$": "$.bucket_name"
+        }
+      },
+      "End": true
+    },
+    "JobFailed": {
+      "Type": "Fail",
+      "Cause": "SageMaker Transform Job Failed"
+    }
+  }
+}

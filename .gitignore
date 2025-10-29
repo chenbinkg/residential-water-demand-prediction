@@ -16,6 +16,8 @@ tf_output*
 **/__pycache__/
 **/venv/
 **.pytest_cache
+**results/*
+**catboost_info/*
 # **.vscode/
 **/auth_env_vars
 **.env*

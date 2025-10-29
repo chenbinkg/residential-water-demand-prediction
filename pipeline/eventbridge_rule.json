@@ -1,0 +1,38 @@
+{
+  "Rules": [
+    {
+      "Name": "water-demand-s3-upload",
+      "EventPattern": {
+        "source": ["aws.s3"],
+        "detail-type": ["Object Created"],
+        "detail": {
+          "bucket": {
+            "name": ["niwa-water-demand-modelling"]
+          },
+          "object": {
+            "key": [
+              {
+                "prefix": "uploads/"
+              }
+            ]
+          }
+        }
+      },
+      "State": "ENABLED",
+      "Targets": [
+        {
+          "Id": "1",
+          "Arn": "arn:aws:states:REGION:ACCOUNT:stateMachine:water-demand-pipeline",
+          "RoleArn": "arn:aws:iam::ACCOUNT:role/EventBridgeStepFunctionsRole",
+          "InputTransformer": {
+            "InputPathsMap": {
+              "bucket": "$.detail.bucket.name",
+              "key": "$.detail.object.key"
+            },
+            "InputTemplate": "{\"bucket_name\": \"<bucket>\", \"file_key\": \"<key>\"}"
+          }
+        }
+      ]
+    }
+  ]
+}
